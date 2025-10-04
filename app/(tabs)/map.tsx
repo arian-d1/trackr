@@ -1,7 +1,7 @@
-import { StyleSheet } from 'react-native';
-import MapView from 'react-native-maps';
+import { StyleSheet } from "react-native";
+import MapView from "react-native-maps";
 
-import { ThemedView } from '@/components/themed-view';
+import { ThemedView } from "@/components/themed-view";
 
 export default function TabTwoScreen() {
   return (

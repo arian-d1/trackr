@@ -2,39 +2,54 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import React, { useState } from "react";
 import {
-    Dimensions,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    Gesture,
-    GestureDetector,
-    GestureHandlerRootView,
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
-    Extrapolate,
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
+  Extrapolate,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const SHEET_PEEK_HEIGHT = 100;
 
 export default function CameraScreen() {
-    
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
   const [facing, setFacing] = useState<CameraType>("back");
   const [permission, requestPermission] = useCameraPermissions();
+
+  const insets = useSafeAreaInsets();
+  const SHEET_PEEK_HEIGHT = 0; // how much shows when collapsed
+  const SHEET_PARTIAL_OPEN = insets.top; // small gap below notch
 
   const sheetTranslation = useSharedValue(SCREEN_HEIGHT - SHEET_PEEK_HEIGHT);
 
   const sheetAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetTranslation.value }],
+    borderTopLeftRadius: interpolate(
+      sheetTranslation.value,
+      [0, SCREEN_HEIGHT - SHEET_PEEK_HEIGHT],
+      [20, 20], // keep rounded at all times
+      Extrapolate.CLAMP,
+    ),
+    borderTopRightRadius: interpolate(
+      sheetTranslation.value,
+      [0, SCREEN_HEIGHT - SHEET_PEEK_HEIGHT],
+      [20, 20],
+      Extrapolate.CLAMP,
+    ),
   }));
 
   const cameraAnimatedStyle = useAnimatedStyle(() => {
@@ -42,9 +57,9 @@ export default function CameraScreen() {
       sheetTranslation.value,
       [0, SCREEN_HEIGHT - SHEET_PEEK_HEIGHT],
       [0, 1],
-      Extrapolate.CLAMP
+      Extrapolate.CLAMP,
     );
-    
+
     return {
       opacity,
     };
@@ -55,9 +70,9 @@ export default function CameraScreen() {
       sheetTranslation.value,
       [0, SCREEN_HEIGHT - SHEET_PEEK_HEIGHT],
       [0, 1],
-      Extrapolate.CLAMP
+      Extrapolate.CLAMP,
     );
-    
+
     return {
       opacity,
     };
@@ -90,17 +105,28 @@ export default function CameraScreen() {
   };
 
   const toggleSheet = () => {
-    if (sheetTranslation.value < SCREEN_HEIGHT / 2) {
-      sheetTranslation.value = withSpring(SCREEN_HEIGHT - SHEET_PEEK_HEIGHT);
+    // If currently collapsed, animate to partially open
+    if (sheetTranslation.value > SHEET_PARTIAL_OPEN) {
+      sheetTranslation.value = withSpring(SHEET_PARTIAL_OPEN, {
+        damping: 100, // higher damping, less bounce
+        stiffness: 100,
+      }); // optional, makes snap firmer });
     } else {
-      sheetTranslation.value = withSpring(0);
+      // Collapse to peek height
+      sheetTranslation.value = withSpring(SCREEN_HEIGHT - SHEET_PEEK_HEIGHT, {
+        damping: 100,
+        stiffness: 100,
+      });
     }
   };
 
   const swipeGesture = Gesture.Pan()
     .onUpdate((event) => {
       const newTranslation = sheetTranslation.value + event.translationY;
-      if (newTranslation >= 0 && newTranslation <= SCREEN_HEIGHT - SHEET_PEEK_HEIGHT) {
+      if (
+        newTranslation >= 0 &&
+        newTranslation <= SCREEN_HEIGHT - SHEET_PEEK_HEIGHT
+      ) {
         sheetTranslation.value = newTranslation;
       }
     })
@@ -121,7 +147,9 @@ export default function CameraScreen() {
             style={{ flex: 1 }}
             facing={facing}
           >
-            <Animated.View style={[styles.buttonContainer, buttonAnimatedStyle]}>
+            <Animated.View
+              style={[styles.buttonContainer, buttonAnimatedStyle]}
+            >
               <TouchableOpacity
                 style={styles.utilButton}
                 onPress={toggleCameraType}
@@ -140,15 +168,8 @@ export default function CameraScreen() {
                 <View style={styles.captureButtonInner} />
               </TouchableOpacity>
 
-              <TouchableOpacity
-                style={styles.utilButton}
-                onPress={toggleSheet}
-              >
-                <IconSymbol
-                  name="arrow.down"
-                  size={28}
-                  color="white"
-                />
+              <TouchableOpacity style={styles.utilButton} onPress={toggleSheet}>
+                <IconSymbol name="arrow.down" size={28} color="white" />
               </TouchableOpacity>
             </Animated.View>
           </CameraView>
@@ -163,11 +184,13 @@ export default function CameraScreen() {
               Inventory
             </Text>
             <ScrollView>
-              {[...Array(20)].map((_, i) => (
-                <Text key={i} style={{ padding: 10 }}>
-                  Item {i + 1}
-                </Text>
-              ))}
+              <View style={styles.gridContainer}>
+                {[...Array(20)].map((_, i) => (
+                  <View key={i} style={styles.gridItem}>
+                    <Text style={styles.gridItemText}>Item {i + 1}</Text>
+                  </View>
+                ))}
+              </View>
             </ScrollView>
           </Animated.View>
         </GestureDetector>
@@ -214,7 +237,6 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#00000020",
   },
- 
   bottomSheet: {
     position: "absolute",
     top: 0,
@@ -222,10 +244,10 @@ const styles = StyleSheet.create({
     right: 0,
     height: SCREEN_HEIGHT,
     backgroundColor: "rgba(255, 255, 255, 0.95)",
-    borderBottomLeftRadius: 20,
-    borderBottomRightRadius: 20,
-    padding: 20,
-    paddingTop: 40,
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 20, // <-- reduced padding
+    paddingTop: 10, // <-- small gap above content
   },
   sheetHandle: {
     width: 40,
@@ -233,17 +255,18 @@ const styles = StyleSheet.create({
     backgroundColor: "#ccc",
     borderRadius: 2.5,
     alignSelf: "center",
-    marginBottom: 15,
+    marginBottom: 2, // <-- tiny margin so handle is close to content
   },
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 15,
+    justifyContent: "space-between", // spread items evenly
+    gap: 10,
     paddingBottom: 20,
   },
   gridItem: {
-    width: "30%",
-    aspectRatio: 1,
+    width: "48%", // ~50% to make 2 items per row with spacing
+    aspectRatio: 1, // keep square
     backgroundColor: "#f0f0f0",
     borderRadius: 10,
     justifyContent: "center",
