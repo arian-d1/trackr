@@ -1,6 +1,6 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
     Dimensions,
     ScrollView,
@@ -23,18 +23,40 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import * as Location from "expo-location";
+
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 
 export default function CameraScreen() {
-  const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
-  const [facing, setFacing] = useState<CameraType>("back");
-  const [permission, requestPermission] = useCameraPermissions();
+    const [cameraPermission, reqCameraPermission] = useCameraPermissions();
+    const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
+    
+    const [locationPermission, setLocationPermission] = useState<Location.PermissionStatus | null>(null);
+    const [location, setLocation] = useState<Location.LocationObject | null>(null);
 
-  const insets = useSafeAreaInsets();
-  const SHEET_PEEK_HEIGHT = 0; // how much shows when collapsed
-  const SHEET_PARTIAL_OPEN = insets.top; // small gap below notch
+    const [facing, setFacing] = useState<CameraType>("back");
 
+    const insets = useSafeAreaInsets();
+    const SHEET_PEEK_HEIGHT = 0; // how much shows when collapsed
+    const SHEET_PARTIAL_OPEN = insets.top; // small gap below notch
+    
   const sheetTranslation = useSharedValue(SCREEN_HEIGHT - SHEET_PEEK_HEIGHT);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status);
+
+      if (status === "granted") {
+        const current = await Location.getCurrentPositionAsync({});
+        setLocation(current);
+        console.log("📍 Current location:", current.coords);
+      } else {
+        console.log("Location permission denied");
+      }
+    })();
+  }, []);
+
 
   const sheetAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetTranslation.value }],
@@ -78,15 +100,15 @@ export default function CameraScreen() {
     };
   });
 
-  if (!permission) {
+  if (!cameraPermission) {
     return <Text>Loading permissions...</Text>;
   }
 
-  if (!permission.granted) {
+  if (!cameraPermission.granted) {
     return (
       <View style={styles.center}>
         <Text>No access to camera</Text>
-        <TouchableOpacity onPress={requestPermission} style={styles.button}>
+        <TouchableOpacity onPress={reqCameraPermission} style={styles.button}>
           <Text style={styles.text}>Grant Permission</Text>
         </TouchableOpacity>
       </View>
@@ -98,9 +120,12 @@ export default function CameraScreen() {
   };
 
   const takePicture = async () => {
-    if (cameraRef) {
+    if (cameraRef && locationPermission) {
       const photo = await cameraRef.takePictureAsync();
+      const current = await Location.getCurrentPositionAsync({});
+    setLocation(current);
       console.log("Photo URI:", photo.uri);
+      console.log("Photo Location:", location)
     }
   };
 
