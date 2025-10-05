@@ -1,10 +1,10 @@
+import cookieParser from "cookie-parser";
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
-import { processImage64 } from "./itt.js";
-import authRouter from "./authRouter.js";
-import cookieParser from "cookie-parser";
 import session from "express-session";
+import authRouter from "./authRouter.js";
+import { processImage64 } from "./itt.js";
 
 
 
@@ -16,9 +16,10 @@ const port = process.env.PORT || 3000;
 // Middleware
 app.use(
   cors({
-    origin: "*", // For testing. Later, lock this down to your actual domain if needed.
+    origin: "exp://172.20.10.10:8081", // For testing. Later, lock this down to your actual domain if needed.
     methods: ["GET", "POST", "OPTIONS"],
     allowedHeaders: ["Content-Type"],
+    credentials: true,
   }),
 );
 app.options("*", cors());
