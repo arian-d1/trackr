@@ -1,92 +1,72 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
-import * as fs from "node:fs";
-import * as path from "node:path";
-import { fileURLToPath } from "url";
-
 dotenv.config();
 
-// Check if API key is present
-if (!process.env.GEMINI_API_KEY) {
-  console.error("Error: GEMINI_API_KEY environment variable is not set");
-  process.exit(1);
-}
+console.log("Gemini API Key:", process.env.GEMINI_API_KEY);
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
-async function getMimeType(filePath) {
-  const extension = path.extname(filePath).toLowerCase();
-  const mimeTypes = {
-    ".jpg": "image/jpeg",
-    ".jpeg": "image/jpeg",
-    ".png": "image/png",
-    ".gif": "image/gif",
-    ".webp": "image/webp",
-  };
-  return mimeTypes[extension] || "image/jpeg";
+// Allowed animals
+const ALLOWED_ANIMALS = [
+  "Raccoon",
+  "Squirrel",
+  "Bear",
+  "Pigeon",
+  "Crow",
+  "Goose",
+];
+
+// Generate Gemini prompt
+function generatePrompt() {
+  return `
+You are an expert wildlife classifier. Analyze the image and identify which animals appear.
+
+Return **strictly valid JSON**:
+{
+  "animals": [
+    { "name": "<AnimalType>" }
+  ]
 }
 
-// Function to handle direct image data (for server use)
-export async function processImage(base64ImageData, mimeType = "image/jpeg") {
-  try {
-    const prompt =
-      "Identify the animal(s) in this image and describe their quality. Return the answer in JSON format with the keys 'animals' which is an array of objects with keys 'name' and 'quality'.";
+Rules:
+- Only use names from this list: ${JSON.stringify(ALLOWED_ANIMALS)}.
+- Do NOT include any explanations, code fences, or extra text.
+- If no allowed animals are found, return { "animals": [] }.
+`;
+}
 
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+// Parse Gemini response (strip ``` if needed)
+function parseResponse(text) {
+  text = text.trim();
+  if (text.startsWith("```")) {
+    text = text
+      .replace(/^```(json)?\s*/i, "")
+      .replace(/```$/i, "")
+      .trim();
+  }
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    console.error("Failed to parse response:", text);
+    return null;
+  }
+}
+
+// Process Expo image URI with Gemini
+export async function processImage64(base64, mimeType = "image/jpeg") {
+  try {
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
+    const prompt = generatePrompt();
 
     const result = await model.generateContent([
       prompt,
-      {
-        inlineData: {
-          mimeType: mimeType,
-          data: base64ImageData,
-        },
-      },
+      { inlineData: { mimeType, data: base64 } },
     ]);
 
-    const response = await result.response;
-    const text = response.text();
-
-    try {
-      return JSON.parse(text);
-    } catch (parseError) {
-      return { text };
-    }
-  } catch (error) {
-    throw new Error(`Image processing failed: ${error.message}`);
+    const responseText = await result.response.text();
+    console.log("Gemini response:", responseText);
+    return parseResponse(responseText);
+  } catch (err) {
+    throw err;
   }
-}
-
-// Function to handle file paths (for command line use)
-async function detectImage() {
-  const imagePath = process.argv[2];
-  if (!imagePath) {
-    console.error("Please provide a path to an image file.");
-    console.error("Usage: node itt.js <path-to-image>");
-    process.exit(1);
-  }
-
-  try {
-    // Check if file exists
-    if (!fs.existsSync(imagePath)) {
-      console.error(`Error: File '${imagePath}' does not exist`);
-      process.exit(1);
-    }
-
-    const base64ImageFile = fs.readFileSync(imagePath, {
-      encoding: "base64",
-    });
-
-    const mimeType = await getMimeType(imagePath);
-    const result = await processImage(base64ImageFile, mimeType);
-    console.log(JSON.stringify(result, null, 2));
-  } catch (error) {
-    console.error("An error occurred:", error.message);
-    process.exit(1);
-  }
-}
-
-// Only run detectImage if this file is being run directly (not imported)
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  detectImage();
 }
