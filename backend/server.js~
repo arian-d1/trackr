@@ -4,7 +4,7 @@ import express from "express";
 import { processImage64 } from "./itt.js";
 import mongoose from 'mongoose';
 
-// mongoose.connect('mongodb://localhost:27017/trackr');
+mongoose.connect('mongodb://localhost:27017/trackr');
 
 dotenv.config();
 
