@@ -251,18 +251,12 @@ export default function CameraScreen() {
             {/* Collection Header */}
             <View style={styles.collectionHeader}>
               <Text style={styles.collectionTitle}>Your Collection</Text>
-              <Text style={styles.collectionSubtitle}>
-                {collectionData.total} Animals Found
-              </Text>
+              <Text style={styles.statsText}>
+                  {collectionData.items.length} animals in your collection
+                </Text>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Collection Stats Summary */}
-              <View style={styles.statsContainer}>
-                <Text style={styles.statsText}>
-                  {collectionData.items.length} animals in your collection
-                </Text>
-              </View>
 
               {/* Grid of all animals */}
               <View style={styles.gridContainer}>
