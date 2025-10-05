@@ -21,6 +21,8 @@ import Animated, {
   useAnimatedStyle,
   useSharedValue,
   withSpring,
+    runOnJS,
+
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -96,6 +98,10 @@ export default function CameraScreen() {
   );
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showAnimalModal, setShowAnimalModal] = useState(false);
+
+  const zoom = useSharedValue(0);
+  const baseZoom = useSharedValue(0);
+  const [zoomLevel, setZoomLevel] = useState(0);
 
   useEffect(() => {
     (async () => {
@@ -219,6 +225,21 @@ export default function CameraScreen() {
       }
     });
 
+  const pinchGesture = Gesture.Pinch()
+  .onStart(() => {
+    baseZoom.value = zoom.value;
+  })
+  .onUpdate((event) => {
+    const nextZoom = Math.min(
+      Math.max(baseZoom.value + (event.scale - 1) * 0.5, 0),
+      1
+    );
+    zoom.value = nextZoom;
+    runOnJS(setZoomLevel)(zoom.value);
+  })
+  .onEnd(() => {
+  });
+
   if (photoUri) {
     return (
       <PhotoPreview
@@ -312,49 +333,55 @@ export default function CameraScreen() {
         )}
 
         <Animated.View style={[{ flex: 1 }, cameraAnimatedStyle]}>
-          <CameraView
-            ref={(ref) => setCameraRef(ref)}
-            style={{ flex: 1 }}
-            facing={facing}
-          >
-            <Animated.View style={[styles.topBar, buttonAnimatedStyle]}>
-              <TouchableOpacity
-                style={styles.profileIconButton}
-                onPress={() => {
-                  // Navigate to profile screen
-                  router.push("/profile");
-                }}
-              >
-                <IconSymbol name="gearshape.fill" size={36} color="white" />
-              </TouchableOpacity>
-            </Animated.View>
-
-            <Animated.View
-              style={[styles.buttonContainer, buttonAnimatedStyle]}
+          <GestureDetector gesture={pinchGesture}>
+            <CameraView
+              ref={(ref) => setCameraRef(ref)}
+              style={{ flex: 1 }}
+              facing={facing}
+              zoom={zoomLevel}
             >
-              <TouchableOpacity
-                style={styles.utilButton}
-                onPress={toggleCameraType}
-              >
-                <IconSymbol
-                  name="arrow.triangle.2.circlepath"
-                  size={32}
-                  color="white"
-                />
-              </TouchableOpacity>
+              <Animated.View style={[styles.topBar, buttonAnimatedStyle]}>
+                <TouchableOpacity
+                  style={styles.profileIconButton}
+                  onPress={() => {
+                    // Navigate to profile screen
+                    router.push("/profile");
+                  }}
+                >
+                  <IconSymbol name="gearshape.fill" size={36} color="white" />
+                </TouchableOpacity>
+              </Animated.View>
 
-              <TouchableOpacity
-                style={styles.captureButton}
-                onPress={takePicture}
+              <Animated.View
+                style={[styles.buttonContainer, buttonAnimatedStyle]}
               >
-                <View style={styles.captureButtonInner} />
-              </TouchableOpacity>
+                <TouchableOpacity
+                  style={styles.utilButton}
+                  onPress={toggleCameraType}
+                >
+                  <IconSymbol
+                    name="arrow.triangle.2.circlepath"
+                    size={32}
+                    color="white"
+                  />
+                </TouchableOpacity>
 
-              <TouchableOpacity style={styles.utilButton} onPress={toggleSheet}>
-                <IconSymbol name="arrow.down" size={28} color="white" />
-              </TouchableOpacity>
-            </Animated.View>
-          </CameraView>
+                <TouchableOpacity
+                  style={styles.captureButton}
+                  onPress={takePicture}
+                >
+                  <View style={styles.captureButtonInner} />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.utilButton}
+                  onPress={toggleSheet}
+                >
+                  <IconSymbol name="arrow.down" size={28} color="white" />
+                </TouchableOpacity>
+              </Animated.View>
+            </CameraView>
+          </GestureDetector>
         </Animated.View>
 
         <GestureDetector gesture={swipeGesture}>

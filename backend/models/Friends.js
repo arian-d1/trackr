@@ -1,4 +1,4 @@
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 /*
 const friendSchema = new mongoose.Schema({
@@ -9,10 +9,10 @@ const friendSchema = new mongoose.Schema({
 */
 
 const friendSchema = new mongoose.Schema({
-  friend_id_1: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  friend_id_2: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+  friend_id_1: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+  friend_id_2: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
 });
 
-const Friend = mongoose.model('Friend', friendSchema);
+const Friend = mongoose.model("Friend", friendSchema);
 
 export default Friend;

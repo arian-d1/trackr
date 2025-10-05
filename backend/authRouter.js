@@ -9,16 +9,20 @@ const router = express.Router();
 
 // Step 1: Redirect user to Google's OAuth 2.0 server
 router.get("/google", (req, res) => {
-  const redirect_uri = encodeURIComponent("https://trackr-2fwo.onrender.com/auth/google/callback");
+  const redirect_uri = encodeURIComponent(
+    "https://trackr-2fwo.onrender.com/auth/google/callback",
+  );
   const client_id = process.env.GOOGLE_CLIENT_ID;
 
-  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${querystring.stringify({
-    client_id,
-    redirect_uri,
-    response_type: "code",
-    scope: "openid email profile",
-    access_type: "offline",
-  })}`;
+  const authUrl = `https://accounts.google.com/o/oauth2/v2/auth?${querystring.stringify(
+    {
+      client_id,
+      redirect_uri,
+      response_type: "code",
+      scope: "openid email profile",
+      access_type: "offline",
+    },
+  )}`;
 
   res.redirect(authUrl);
 });
@@ -30,27 +34,30 @@ router.get("/google/callback", async (req, res) => {
   try {
     // Exchange code for tokens
     const tokenRes = await axios.post(
-  "https://oauth2.googleapis.com/token",
-  querystring.stringify({
-    code,
-    client_id: process.env.GOOGLE_CLIENT_ID,
-    client_secret: process.env.GOOGLE_CLIENT_SECRET,
-    redirect_uri: "https://trackr-2fwo.onrender.com/auth/google/callback",
-    grant_type: "authorization_code",
-  }),
-  {
-    headers: { "Content-Type": "application/x-www-form-urlencoded" },
-  }
-);
+      "https://oauth2.googleapis.com/token",
+      querystring.stringify({
+        code,
+        client_id: process.env.GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: "https://trackr-2fwo.onrender.com/auth/google/callback",
+        grant_type: "authorization_code",
+      }),
+      {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      },
+    );
 
     const { id_token, access_token } = tokenRes.data;
 
     // You can now verify id_token (JWT) and/or fetch user info
-    const userInfo = await axios.get("https://www.googleapis.com/oauth2/v2/userinfo", {
-      headers: { Authorization: `Bearer ${access_token}` },
-    });
+    const userInfo = await axios.get(
+      "https://www.googleapis.com/oauth2/v2/userinfo",
+      {
+        headers: { Authorization: `Bearer ${access_token}` },
+      },
+    );
 
-        req.session.user = userInfo.data;
+    req.session.user = userInfo.data;
 
     // Here you can create a session or JWT for your app
     // Redirect back to app with some session token

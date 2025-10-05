@@ -5,11 +5,9 @@ import express from "express";
 import session from "express-session";
 import authRouter from "./authRouter.js";
 import { processImage64 } from "./itt.js";
-import mongoose from 'mongoose';
+import mongoose from "mongoose";
 
 // mongoose.connect('mongodb://localhost:27017/trackr');
-
-
 
 dotenv.config();
 
@@ -29,16 +27,17 @@ app.options("*", cors());
 app.use(express.json({ limit: "10mb" })); // Increase limit for base64
 app.use(cookieParser());
 
-
-app.use(session({
-  secret: process.env.SESSION_SECRET || "supersecret",
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    httpOnly: true,
-    maxAge: 24 * 60 * 60 * 1000, // 1 day
-  },
-}));
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "supersecret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    },
+  }),
+);
 
 const apiRouter = express.Router();
 
@@ -67,7 +66,6 @@ apiRouter.post("/process", async (req, res) => {
 });
 
 app.use("/auth", authRouter);
-
 
 // Error handling middleware
 app.use((err, req, res, next) => {
