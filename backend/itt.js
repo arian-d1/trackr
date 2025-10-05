@@ -25,6 +25,37 @@ async function getMimeType(filePath) {
   return mimeTypes[extension] || 'image/jpeg';
 }
 
+// Function to handle direct image data (for server use)
+export async function processImage(base64ImageData, mimeType = 'image/jpeg') {
+  try {
+    const prompt = "Identify the animal(s) in this image and describe their quality. Return the answer in JSON format with the keys 'animals' which is an array of objects with keys 'name' and 'quality'.";
+
+    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
+
+    const result = await model.generateContent([
+      prompt,
+      {
+        inlineData: {
+          mimeType: mimeType,
+          data: base64ImageData,
+        },
+      },
+    ]);
+
+    const response = await result.response;
+    const text = response.text();
+    
+    try {
+      return JSON.parse(text);
+    } catch (parseError) {
+      return { text };
+    }
+  } catch (error) {
+    throw new Error(`Image processing failed: ${error.message}`);
+  }
+}
+
+// Function to handle file paths (for command line use)
 async function detectImage() {
   const imagePath = process.argv[2];
   if (!imagePath) {
@@ -45,27 +76,15 @@ async function detectImage() {
     });
 
     const mimeType = await getMimeType(imagePath);
-    
-    const prompt = "Identify the animal(s) in this image and describe their quality. Return the answer in JSON format with the keys 'animals' which is an array of objects with keys 'name' and 'quality'.";
-
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
-
-    const result = await model.generateContent([
-      prompt,
-      {
-        inlineData: {
-          mimeType: mimeType,
-          data: base64ImageFile,
-        },
-      },
-    ]);
-
-    const response = await result.response;
-    console.log(response.text());
+    const result = await processImage(base64ImageFile, mimeType);
+    console.log(JSON.stringify(result, null, 2));
   } catch (error) {
     console.error("An error occurred:", error.message);
     process.exit(1);
   }
 }
 
-detectImage();
+// Only run detectImage if this file is being run directly (not imported)
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  detectImage();
+}
