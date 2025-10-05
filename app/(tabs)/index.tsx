@@ -2,25 +2,25 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import React, { useEffect, useState } from "react";
 import {
-    Dimensions,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    Gesture,
-    GestureDetector,
-    GestureHandlerRootView,
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
-    Extrapolate,
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
+  Extrapolate,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29,40 +29,43 @@ import * as Location from "expo-location";
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const collectionData = {
   items: [
-        { id: 1, user_id: 1, power: 122, animal_type: "Raccoon", image_uri: "/" },
-        { id: 2, user_id: 1, power: 1532, animal_type: "Squirrel", emoji: "/" },
-        { id: 3, user_id: 1, power: 43, animal_type: "Bear", emoji: "/" },
-        { id: 4, user_id: 1, power: 3824, animal_type: "Pigeon", emoji: "/" },
-        { id: 5, user_id: 1, power: 232, animal_type: "Pigeon", emoji: "/" },
-        { id: 6, user_id: 1, power: 453, animal_type: "Crow", emoji: "/" },
-        { id: 7, user_id: 1, power: 252, animal_type: "Goose", emoji: "/" },
-      ],
-      total: 7
+    { id: 1, user_id: 1, power: 122, animal_type: "Raccoon", image_uri: "/" },
+    { id: 2, user_id: 1, power: 1532, animal_type: "Squirrel", emoji: "/" },
+    { id: 3, user_id: 1, power: 43, animal_type: "Bear", emoji: "/" },
+    { id: 4, user_id: 1, power: 3824, animal_type: "Pigeon", emoji: "/" },
+    { id: 5, user_id: 1, power: 232, animal_type: "Pigeon", emoji: "/" },
+    { id: 6, user_id: 1, power: 453, animal_type: "Crow", emoji: "/" },
+    { id: 7, user_id: 1, power: 252, animal_type: "Goose", emoji: "/" },
+  ],
+  total: 7,
 };
 
 // Animal image dictionary
 const animal_image_dict: { [key: string]: any } = {
-  'Raccoon': require("../../assets/images/raccoon.png"),
-  'Squirrel': require("../../assets/images/squirrel.png"),
-  'Bear': require("../../assets/images/bear.png"),
-  'Pigeon': require("../../assets/images/pigeon.png"),
-  'Crow': require("../../assets/images/crow.png"),
-  'Goose': require("../../assets/images/goose.png"),
+  Raccoon: require("../../assets/images/raccoon.png"),
+  Squirrel: require("../../assets/images/squirrel.png"),
+  Bear: require("../../assets/images/bear.png"),
+  Pigeon: require("../../assets/images/pigeon.png"),
+  Crow: require("../../assets/images/crow.png"),
+  Goose: require("../../assets/images/goose.png"),
 };
 
 export default function CameraScreen() {
-    const [cameraPermission, reqCameraPermission] = useCameraPermissions();
-    const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
-    
-    const [locationPermission, setLocationPermission] = useState<Location.PermissionStatus | null>(null);
-    const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [cameraPermission, reqCameraPermission] = useCameraPermissions();
+  const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
 
-    const [facing, setFacing] = useState<CameraType>("back");
+  const [locationPermission, setLocationPermission] =
+    useState<Location.PermissionStatus | null>(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
 
-    const insets = useSafeAreaInsets();
-    const SHEET_PEEK_HEIGHT = 0; // how much shows when collapsed
-    const SHEET_PARTIAL_OPEN = insets.top; // small gap below notch
-    
+  const [facing, setFacing] = useState<CameraType>("back");
+
+  const insets = useSafeAreaInsets();
+  const SHEET_PEEK_HEIGHT = 0; // how much shows when collapsed
+  const SHEET_PARTIAL_OPEN = insets.top; // small gap below notch
+
   const sheetTranslation = useSharedValue(SCREEN_HEIGHT - SHEET_PEEK_HEIGHT);
 
   useEffect(() => {
@@ -78,7 +81,6 @@ export default function CameraScreen() {
       }
     })();
   }, []);
-
 
   const sheetAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetTranslation.value }],
@@ -145,9 +147,9 @@ export default function CameraScreen() {
     if (cameraRef && locationPermission) {
       const photo = await cameraRef.takePictureAsync();
       const current = await Location.getCurrentPositionAsync({});
-    setLocation(current);
+      setLocation(current);
       console.log("Photo URI:", photo.uri);
-      console.log("Photo Location:", location)
+      console.log("Photo Location:", location);
     }
   };
 
@@ -226,7 +228,6 @@ export default function CameraScreen() {
           <Animated.View style={[styles.bottomSheet, sheetAnimatedStyle]}>
             <View style={styles.sheetHandle} />
 
-
             {/* Collection Header */}
             <View style={styles.collectionHeader}>
               <Text style={styles.collectionTitle}>Your Collection</Text>
@@ -243,7 +244,6 @@ export default function CameraScreen() {
                 </Text>
               </View>
 
-              
               {/* Grid of all animals */}
               <View style={styles.gridContainer}>
                 {collectionData.items.map((item) => (
@@ -257,8 +257,8 @@ export default function CameraScreen() {
                       <Text style={styles.cardLabel}>{item.animal_type}</Text>
                     </View>
                     {animal_image_dict[item.animal_type] && (
-                      <Image 
-                        source={animal_image_dict[item.animal_type]} 
+                      <Image
+                        source={animal_image_dict[item.animal_type]}
                         style={styles.cardIcon}
                         resizeMode="contain"
                       />
@@ -266,7 +266,7 @@ export default function CameraScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-              
+
               {/* Bottom padding for scroll */}
               <View style={{ height: 100 }} />
             </ScrollView>
@@ -424,13 +424,13 @@ const styles = StyleSheet.create({
     backgroundColor: "#00000080",
     borderRadius: 10,
   },
-  text: { 
-    color: "white", 
-    fontSize: 18 
+  text: {
+    color: "white",
+    fontSize: 18,
   },
-  center: { 
-    flex: 1, 
-    justifyContent: "center", 
-    alignItems: "center" 
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });
