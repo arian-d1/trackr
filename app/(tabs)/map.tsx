@@ -60,7 +60,10 @@ export default function TabTwoScreen() {
           {animals.map((item, index) => (
             <Marker
               key={index}
-              coordinate={{ latitude: item.latitude, longitude: item.longitude }}
+              coordinate={{
+                latitude: item.latitude,
+                longitude: item.longitude,
+              }}
               anchor={{ x: 0.5, y: 0.8 }} // Closer to icon
             >
               {item.image ? (
@@ -116,7 +119,7 @@ const styles = StyleSheet.create({
   calloutBox: {
     backgroundColor: "white",
     minWidth: 100,
-    maxWidth: 500
+    maxWidth: 500,
     // Wider box to fit full text
   },
   calloutText: {

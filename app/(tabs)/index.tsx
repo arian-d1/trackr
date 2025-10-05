@@ -2,30 +2,33 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import React, { useEffect, useState } from "react";
 import {
-    Dimensions,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    Gesture,
-    GestureDetector,
-    GestureHandlerRootView,
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
-    Extrapolate,
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
+  Extrapolate,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import PhotoPreview from "@/components/PhotoPreview";
+import * as FileSystem from "expo-file-system/legacy";
 import * as Location from "expo-location";
+
+import { processImageBase64 } from "../util/gemini";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const collectionData = {
@@ -50,6 +53,19 @@ const animal_image_dict: { [key: string]: any } = {
   Crow: require("../../assets/images/crow.png"),
   Goose: require("../../assets/images/goose.png"),
 };
+
+// Read file as Base64
+async function getImageAsBase64(uri: string) {
+  try {
+    const base64 = await FileSystem.readAsStringAsync(uri, {
+      encoding: FileSystem.EncodingType.Base64,
+    });
+    return base64;
+  } catch (error) {
+    console.error("Failed to read image:", error);
+    return null;
+  }
+}
 
 export default function CameraScreen() {
   const [cameraPermission, reqCameraPermission] = useCameraPermissions();
@@ -148,10 +164,14 @@ export default function CameraScreen() {
 
   const takePicture = async () => {
     if (cameraRef && locationPermission) {
-      const photo = await cameraRef.takePictureAsync();
-      const current = await Location.getCurrentPositionAsync({});
-      setLocation(current);
-      setPhotoUri(photo.uri);
+      try {
+        const photo = await cameraRef.takePictureAsync();
+        const current = await Location.getCurrentPositionAsync({});
+        setLocation(current);
+        setPhotoUri(photo.uri);
+      } catch (error) {
+        console.error("Error taking picture:", error);
+      }
     }
   };
 
@@ -194,13 +214,20 @@ export default function CameraScreen() {
       <PhotoPreview
         uri={photoUri}
         onCancel={() => {
-            setPhotoUri(null)
-            console.log("Declined photo")
+          setPhotoUri(null);
+          console.log("Declined photo");
         }}
-        onContinue={() => {
+        onContinue={async () => {
           console.log("Accepted photo:", JSON.stringify(photoUri));
           console.log("Location:", location);
-          // TODO: navigate or upload
+          try {
+            const base64Image = await getImageAsBase64(photoUri);
+            const response = await processImageBase64(base64Image);
+            console.log(response);
+          } catch (error) {
+            console.error("Error processing image:", error);
+          }
+
           setPhotoUri(null);
         }}
       />
@@ -252,12 +279,11 @@ export default function CameraScreen() {
             <View style={styles.collectionHeader}>
               <Text style={styles.collectionTitle}>Your Collection</Text>
               <Text style={styles.statsText}>
-                  {collectionData.items.length} animals in your collection
-                </Text>
+                {collectionData.items.length} animals in your collection
+              </Text>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-
               {/* Grid of all animals */}
               <View style={styles.gridContainer}>
                 {collectionData.items.map((item) => (
