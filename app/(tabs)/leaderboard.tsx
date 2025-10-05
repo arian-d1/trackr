@@ -1,5 +1,6 @@
 import React from 'react';
 import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const data = [
   { place: '#1', person: 'Arian Dotyar', found: 200 },
@@ -9,8 +10,10 @@ const data = [
 ];
 
 export default function Leaderboard() {
+  const insets = useSafeAreaInsets();
+
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { paddingTop: insets.top }]}>
       <View style={styles.tabContainer}>
              <View style={styles.tabRow}>
                 <View style={styles.tabsContainer}>
