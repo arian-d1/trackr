@@ -3,10 +3,10 @@ import { FlatList, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const data = [
-  { place: "#1", person: "Arian Dotyar", found: 200 },
-  { place: "#2", person: "Warren Chemerika", found: 100 },
-  { place: "#3", person: "Yan Xue", found: 50 },
-  { place: "#4", person: "Sevy", found: 25 },
+  { place: "#1", person: "Arian Dotyar", found: 7 },
+  { place: "#2", person: "Warren Chemerika", found: 4 },
+  { place: "#3", person: "Yan Xue", found: 3 },
+  { place: "#4", person: "Sevy", found: 2 },
 ];
 
 export default function Leaderboard() {

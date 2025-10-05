@@ -17,9 +17,9 @@ export default function FriendsScreen() {
   const [searchQuery, setSearchQuery] = useState("");
 
   const friends = [
-    { id: 1, name: "Warren Chemerika", animalsFound: 8234 },
-    { id: 2, name: "Yan Xue", animalsFound: 6521 },
-    { id: 3, name: "Sevy", animalsFound: 12043 },
+    { id: 1, name: "Warren Chemerika", animalsFound: 4 },
+    { id: 2, name: "Yan Xue", animalsFound: 3 },
+    { id: 3, name: "Sevy", animalsFound: 2 },
   ];
 
   const filteredFriends = friends.filter((friend) =>

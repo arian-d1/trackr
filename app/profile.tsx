@@ -1,6 +1,5 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useRouter } from "expo-router";
-import React from "react";
 import {
   ScrollView,
   StyleSheet,
@@ -36,7 +35,7 @@ export default function ProfileScreen() {
             <Text style={profileStyles.profileInitial}>A</Text>
           </View>
           <Text style={profileStyles.profileName}>Arian Dotyar</Text>
-          <Text style={profileStyles.statsText}>10,254 Animals Found</Text>
+          <Text style={profileStyles.statsText}>7 Animals Found</Text>
         </View>
 
         {/* Divider */}
