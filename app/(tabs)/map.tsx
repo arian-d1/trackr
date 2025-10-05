@@ -49,7 +49,7 @@ export default function TabTwoScreen() {
             style={styles.map}
             initialRegion={{
               latitude: 49.2827,
-              longitude: -123.1207,
+              longitude: -122.9202,
               latitudeDelta: 0.05,
               longitudeDelta: 0.05,
             }}

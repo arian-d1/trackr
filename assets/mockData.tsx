@@ -11,8 +11,8 @@ export type Animal = {
 
 export const mockData: Animal[] = [
   {
-    latitude: 49.2827,
-    longitude: -123.1207,
+    latitude: 49.2791,
+    longitude: -122.9202,
     animal: "Crow",
     image: require("./images/crow.png"),
     foundBy: "",
@@ -20,7 +20,7 @@ export const mockData: Animal[] = [
   },
   {
     latitude: 49.2835,
-    longitude: -123.118,
+    longitude: -122.9202,
     animal: "Goose",
     image: require("./images/goose.png"),
     foundBy: "",
@@ -28,7 +28,7 @@ export const mockData: Animal[] = [
   },
   {
     latitude: 49.28,
-    longitude: -123.1234,
+    longitude: -122.9202,
     animal: "Grizzly",
     image: require("./images/bear.png"),
     foundBy: "",
@@ -36,7 +36,7 @@ export const mockData: Animal[] = [
   },
   {
     latitude: 49.285,
-    longitude: -123.119,
+    longitude: -122.9202,
     animal: "Pigeon",
     image: require("./images/pigeon.png"),
     foundBy: "",
