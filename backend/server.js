@@ -2,6 +2,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
 import { processImage64 } from "./itt.js";
+import authRouter from "./authRouter.js";
+import cookieParser from "cookie-parser";
+
 
 dotenv.config();
 
@@ -18,6 +21,18 @@ app.use(
 );
 app.options("*", cors());
 app.use(express.json({ limit: "10mb" })); // Increase limit for base64
+app.use(cookieParser());
+
+
+app.use(session({
+  secret: process.env.SESSION_SECRET || "supersecret",
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    maxAge: 24 * 60 * 60 * 1000, // 1 day
+  },
+}));
 
 // Endpoint 1: Process image using itt.js
 app.post("/api/process", async (req, res) => {
@@ -40,6 +55,9 @@ app.post("/api/process", async (req, res) => {
     res.status(500).json({ error: "Failed to process image" });
   }
 });
+
+app.use("/auth", authRouter);
+
 
 // Error handling middleware
 app.use((err, req, res, next) => {
