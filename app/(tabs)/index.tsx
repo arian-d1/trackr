@@ -1,8 +1,9 @@
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Dimensions,
+  Image,
   ScrollView,
   StyleSheet,
   Text,
@@ -23,18 +24,63 @@ import Animated, {
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import * as Location from "expo-location";
+
 const SCREEN_HEIGHT = Dimensions.get("window").height;
+const collectionData = {
+  items: [
+    { id: 1, user_id: 1, power: 122, animal_type: "Raccoon", image_uri: "/" },
+    { id: 2, user_id: 1, power: 1532, animal_type: "Squirrel", emoji: "/" },
+    { id: 3, user_id: 1, power: 43, animal_type: "Bear", emoji: "/" },
+    { id: 4, user_id: 1, power: 3824, animal_type: "Pigeon", emoji: "/" },
+    { id: 5, user_id: 1, power: 232, animal_type: "Pigeon", emoji: "/" },
+    { id: 6, user_id: 1, power: 453, animal_type: "Crow", emoji: "/" },
+    { id: 7, user_id: 1, power: 252, animal_type: "Goose", emoji: "/" },
+  ],
+  total: 7,
+};
+
+// Animal image dictionary
+const animal_image_dict: { [key: string]: any } = {
+  Raccoon: require("../../assets/images/raccoon.png"),
+  Squirrel: require("../../assets/images/squirrel.png"),
+  Bear: require("../../assets/images/bear.png"),
+  Pigeon: require("../../assets/images/pigeon.png"),
+  Crow: require("../../assets/images/crow.png"),
+  Goose: require("../../assets/images/goose.png"),
+};
 
 export default function CameraScreen() {
+  const [cameraPermission, reqCameraPermission] = useCameraPermissions();
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
+
+  const [locationPermission, setLocationPermission] =
+    useState<Location.PermissionStatus | null>(null);
+  const [location, setLocation] = useState<Location.LocationObject | null>(
+    null,
+  );
+
   const [facing, setFacing] = useState<CameraType>("back");
-  const [permission, requestPermission] = useCameraPermissions();
 
   const insets = useSafeAreaInsets();
   const SHEET_PEEK_HEIGHT = 0; // how much shows when collapsed
   const SHEET_PARTIAL_OPEN = insets.top; // small gap below notch
 
   const sheetTranslation = useSharedValue(SCREEN_HEIGHT - SHEET_PEEK_HEIGHT);
+
+  useEffect(() => {
+    (async () => {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      setLocationPermission(status);
+
+      if (status === "granted") {
+        const current = await Location.getCurrentPositionAsync({});
+        setLocation(current);
+      } else {
+        console.log("Location permission denied");
+      }
+    })();
+  }, []);
 
   const sheetAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetTranslation.value }],
@@ -78,15 +124,15 @@ export default function CameraScreen() {
     };
   });
 
-  if (!permission) {
+  if (!cameraPermission) {
     return <Text>Loading permissions...</Text>;
   }
 
-  if (!permission.granted) {
+  if (!cameraPermission.granted) {
     return (
       <View style={styles.center}>
         <Text>No access to camera</Text>
-        <TouchableOpacity onPress={requestPermission} style={styles.button}>
+        <TouchableOpacity onPress={reqCameraPermission} style={styles.button}>
           <Text style={styles.text}>Grant Permission</Text>
         </TouchableOpacity>
       </View>
@@ -98,9 +144,12 @@ export default function CameraScreen() {
   };
 
   const takePicture = async () => {
-    if (cameraRef) {
+    if (cameraRef && locationPermission) {
       const photo = await cameraRef.takePictureAsync();
+      const current = await Location.getCurrentPositionAsync({});
+      setLocation(current);
       console.log("Photo URI:", photo.uri);
+      console.log("Photo Location:", location);
     }
   };
 
@@ -178,19 +227,48 @@ export default function CameraScreen() {
         <GestureDetector gesture={swipeGesture}>
           <Animated.View style={[styles.bottomSheet, sheetAnimatedStyle]}>
             <View style={styles.sheetHandle} />
-            <Text
-              style={{ fontSize: 20, fontWeight: "bold", marginBottom: 10 }}
-            >
-              Inventory
-            </Text>
-            <ScrollView>
+
+            {/* Collection Header */}
+            <View style={styles.collectionHeader}>
+              <Text style={styles.collectionTitle}>Your Collection</Text>
+              <Text style={styles.collectionSubtitle}>
+                {collectionData.total} Animals Found
+              </Text>
+            </View>
+
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {/* Collection Stats Summary */}
+              <View style={styles.statsContainer}>
+                <Text style={styles.statsText}>
+                  {collectionData.items.length} animals in your collection
+                </Text>
+              </View>
+
+              {/* Grid of all animals */}
               <View style={styles.gridContainer}>
-                {[...Array(20)].map((_, i) => (
-                  <View key={i} style={styles.gridItem}>
-                    <Text style={styles.gridItemText}>Item {i + 1}</Text>
-                  </View>
+                {collectionData.items.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.collectionCard}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.cardContent}>
+                      <Text style={styles.cardCount}>{item.power}</Text>
+                      <Text style={styles.cardLabel}>{item.animal_type}</Text>
+                    </View>
+                    {animal_image_dict[item.animal_type] && (
+                      <Image
+                        source={animal_image_dict[item.animal_type]}
+                        style={styles.cardIcon}
+                        resizeMode="contain"
+                      />
+                    )}
+                  </TouchableOpacity>
                 ))}
               </View>
+
+              {/* Bottom padding for scroll */}
+              <View style={{ height: 100 }} />
             </ScrollView>
           </Animated.View>
         </GestureDetector>
@@ -243,47 +321,116 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     height: SCREEN_HEIGHT,
-    backgroundColor: "rgba(255, 255, 255, 0.95)",
+    backgroundColor: "#FEFAE0",
     borderTopLeftRadius: 20,
     borderTopRightRadius: 20,
-    padding: 20, // <-- reduced padding
-    paddingTop: 10, // <-- small gap above content
+    padding: 20,
+    paddingTop: 10,
   },
   sheetHandle: {
     width: 40,
     height: 5,
-    backgroundColor: "#ccc",
+    backgroundColor: "#D4A373",
     borderRadius: 2.5,
     alignSelf: "center",
-    marginBottom: 2, // <-- tiny margin so handle is close to content
+    marginBottom: 16,
+  },
+  collectionHeader: {
+    alignItems: "center",
+    marginBottom: 24,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E9EDC9",
+  },
+  collectionTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#1A1A1A",
+    marginBottom: 4,
+  },
+  collectionSubtitle: {
+    fontSize: 16,
+    color: "#666",
+    fontWeight: "500",
+  },
+  categorySection: {
+    marginBottom: 24,
+  },
+  statsContainer: {
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  statsText: {
+    fontSize: 14,
+    color: "#D4A373",
+    fontWeight: "500",
+  },
+  categoryTitle: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#D4A373",
+    marginBottom: 12,
+    marginLeft: 4,
   },
   gridContainer: {
     flexDirection: "row",
     flexWrap: "wrap",
-    justifyContent: "space-between", // spread items evenly
-    gap: 10,
-    paddingBottom: 20,
+    justifyContent: "space-between",
+    gap: 12,
   },
-  gridItem: {
-    width: "48%", // ~50% to make 2 items per row with spacing
-    aspectRatio: 1, // keep square
-    backgroundColor: "#f0f0f0",
-    borderRadius: 10,
-    justifyContent: "center",
-    alignItems: "center",
+  collectionCard: {
+    width: "48%",
+    aspectRatio: 1.2,
+    backgroundColor: "#FAEDCD",
+    borderRadius: 16,
+    padding: 16,
+    justifyContent: "space-between",
     borderWidth: 1,
-    borderColor: "#e0e0e0",
+    borderColor: "#E9EDC9",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 4,
+    elevation: 2,
   },
-  gridItemText: {
+  cardContent: {
+    flex: 1,
+    justifyContent: "flex-start",
+  },
+  cardCount: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "#D4A373",
+    marginBottom: 4,
+  },
+  cardLabel: {
     fontSize: 14,
-    fontWeight: "500",
-    color: "#333",
+    color: "#CCD5AE",
+    fontWeight: "600",
+  },
+  cardEmoji: {
+    fontSize: 48,
+    alignSelf: "flex-end",
+    marginTop: -8,
+  },
+  cardIcon: {
+    width: 64,
+    height: 64,
+    alignSelf: "flex-end",
+    marginTop: -8,
   },
   button: {
     padding: 15,
     backgroundColor: "#00000080",
     borderRadius: 10,
   },
-  text: { color: "white", fontSize: 18 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  text: {
+    color: "white",
+    fontSize: 18,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
