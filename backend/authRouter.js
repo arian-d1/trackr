@@ -1,8 +1,8 @@
 // server.js or authRoutes.js
-import express from "express";
 import axios from "axios";
-import querystring from "querystring";
 import dotenv from "dotenv";
+import express from "express";
+import querystring from "querystring";
 dotenv.config();
 
 const router = express.Router();
@@ -56,7 +56,7 @@ router.get("/google/callback", async (req, res) => {
 });
 
 // Endpoint to check session
-app.get("/me", (req, res) => {
+router.get("/me", (req, res) => {
   if (req.session.user) {
     res.json({ user: req.session.user });
   } else {
