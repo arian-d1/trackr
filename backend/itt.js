@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import dotenv from "dotenv";
 import * as fs from "node:fs";
 import * as path from "node:path";
+import { fileURLToPath } from 'url';
 
 dotenv.config();
 
