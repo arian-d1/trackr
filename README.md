@@ -9,7 +9,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 ## Get started
 1. Clone this repository
    ```bash
-   git clone 
+   git clone https://github.com/arian-d1/trackr.git
 2. Install Dependencies
     ```bash
    npm install
