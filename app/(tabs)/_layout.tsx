@@ -27,7 +27,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="camera"
+        name="index"
         options={{
           title: "Camera",
           tabBarIcon: ({ color }) => (
@@ -36,7 +36,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="index"
+        name="leaderboard"
         options={{
           title: "Leaderboard",
           tabBarIcon: ({ color }) => (
