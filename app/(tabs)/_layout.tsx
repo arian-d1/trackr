@@ -15,6 +15,11 @@ export default function TabLayout() {
         tabBarActiveTintColor: Colors[colorScheme ?? "light"].tint,
         headerShown: false,
         tabBarButton: HapticTab,
+         tabBarStyle: {
+          backgroundColor: "#none",
+          borderTopColor: "transparent", // optional, removes top border
+          paddingTop: 10,
+        },
       }}
     >
       <Tabs.Screen
