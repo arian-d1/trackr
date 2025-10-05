@@ -5,6 +5,9 @@ trackr is a gamified wildlife recognition and logging app
 designed for anyone, anywhere.
 
 This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+## Tech Stack
+Frontend: React Native
+Backend: Node.js
 
 ## Design
 See our figma: https://www.figma.com/design/kVMjFmQlaH0wzLTeMCUUH4/Trackr---StormHacks-2025?node-id=0-1&p=f&t=oJKFFZNahVWzhSy4-0
