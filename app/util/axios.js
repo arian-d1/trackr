@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const instance = axios.create({
-  baseURL: "http://172.20.10.10:3000", // Your backend URL
+  baseURL: "https://trackr-2fwo.onrender.com",
   headers: {
     "Content-Type": "application/json",
   },
