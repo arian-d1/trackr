@@ -4,6 +4,8 @@ import express from "express";
 import { processImage64 } from "./itt.js";
 import authRouter from "./authRouter.js";
 import cookieParser from "cookie-parser";
+import session from "express-session";
+
 
 
 dotenv.config();
