@@ -16,13 +16,13 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 async function getMimeType(filePath) {
   const extension = path.extname(filePath).toLowerCase();
   const mimeTypes = {
-    '.jpg': 'image/jpeg',
-    '.jpeg': 'image/jpeg',
-    '.png': 'image/png',
-    '.gif': 'image/gif',
-    '.webp': 'image/webp'
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
   };
-  return mimeTypes[extension] || 'image/jpeg';
+  return mimeTypes[extension] || "image/jpeg";
 }
 
 async function detectImage() {
@@ -45,8 +45,9 @@ async function detectImage() {
     });
 
     const mimeType = await getMimeType(imagePath);
-    
-    const prompt = "Identify the animal(s) in this image and describe their quality. Return the answer in JSON format with the keys 'animals' which is an array of objects with keys 'name' and 'quality'.";
+
+    const prompt =
+      "Identify the animal(s) in this image and describe their quality. Return the answer in JSON format with the keys 'animals' which is an array of objects with keys 'name' and 'quality'.";
 
     const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-exp" });
 
