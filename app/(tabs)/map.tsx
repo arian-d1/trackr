@@ -175,8 +175,8 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.7)", // subtle translucent
   },
   toggleSelected: {
-    backgroundColor: "rgba(0,122,255,0.9)",
-    borderColor: "#007AFF",
+    backgroundColor: "rgba(150, 150, 150, 0.4)",
+    borderColor: "rgba(150, 150, 150, 0.4)",
   },
   toggleText: {
     color: "#333",
