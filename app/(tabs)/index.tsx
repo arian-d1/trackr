@@ -2,25 +2,25 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import React, { useEffect, useState } from "react";
 import {
-    Dimensions,
-    Image,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  Dimensions,
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import {
-    Gesture,
-    GestureDetector,
-    GestureHandlerRootView,
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
-    Extrapolate,
-    interpolate,
-    useAnimatedStyle,
-    useSharedValue,
-    withSpring,
+  Extrapolate,
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -29,6 +29,8 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Location from "expo-location";
 
 import { processImageBase64 } from "../util/gemini";
+
+import { useRouter } from "expo-router";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
 const collectionData = {
@@ -86,6 +88,14 @@ export default function CameraScreen() {
   const SHEET_PARTIAL_OPEN = insets.top; // small gap below notch
 
   const sheetTranslation = useSharedValue(SCREEN_HEIGHT - SHEET_PEEK_HEIGHT);
+
+  const router = useRouter();
+
+  const [animalModalData, setAnimalModalData] = useState<{ name: string }[]>(
+    [],
+  );
+  const [currentCardIndex, setCurrentCardIndex] = useState(0);
+  const [showAnimalModal, setShowAnimalModal] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -223,6 +233,12 @@ export default function CameraScreen() {
           try {
             const base64Image = await getImageAsBase64(photoUri);
             const response = await processImageBase64(base64Image);
+
+            if (response.animals && response.animals.length > 0) {
+              setAnimalModalData(response.animals);
+              setCurrentCardIndex(0);
+              setShowAnimalModal(true);
+            }
             console.log(response);
           } catch (error) {
             console.error("Error processing image:", error);
@@ -237,12 +253,82 @@ export default function CameraScreen() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
+        {/* --- ANIMAL MODAL OVERLAY GOES HERE --- */}
+        {showAnimalModal && (
+          <View style={styles.modalOverlay}>
+            {animalModalData.slice(currentCardIndex).map((animal, index) => {
+              const isTopCard = index === 0;
+              return (
+                <Animated.View
+                  key={index}
+                  style={[
+                    styles.animalCard,
+                    { zIndex: animalModalData.length - index },
+                    isTopCard && { transform: [{ scale: 1 }] },
+                  ]}
+                >
+                  {animal_image_dict[animal.name] && (
+                    <Image
+                      source={animal_image_dict[animal.name]}
+                      style={{ width: 120, height: 120, marginBottom: 20 }}
+                      resizeMode="contain"
+                    />
+                  )}
+                  <Text
+                    style={{
+                      fontSize: 24,
+                      fontWeight: "bold",
+                      marginBottom: 10,
+                    }}
+                  >
+                    {animal.name}
+                  </Text>
+                  {isTopCard && (
+                    <TouchableOpacity
+                      onPress={() => {
+                        if (currentCardIndex + 1 >= animalModalData.length) {
+                          setShowAnimalModal(false);
+                        } else {
+                          setCurrentCardIndex((prev) => prev + 1);
+                        }
+                      }}
+                      style={{
+                        marginTop: 20,
+                        paddingVertical: 10,
+                        paddingHorizontal: 30,
+                        backgroundColor: "#D4A373",
+                        borderRadius: 20,
+                      }}
+                    >
+                      <Text style={{ color: "white", fontWeight: "bold" }}>
+                        Next
+                      </Text>
+                    </TouchableOpacity>
+                  )}
+                </Animated.View>
+              );
+            })}
+          </View>
+        )}
+
         <Animated.View style={[{ flex: 1 }, cameraAnimatedStyle]}>
           <CameraView
             ref={(ref) => setCameraRef(ref)}
             style={{ flex: 1 }}
             facing={facing}
           >
+            <Animated.View style={[styles.topBar, buttonAnimatedStyle]}>
+              <TouchableOpacity
+                style={styles.profileIconButton}
+                onPress={() => {
+                  // Navigate to profile screen
+                  router.push("/profile");
+                }}
+              >
+                <IconSymbol name="gearshape.fill" size={36} color="white" />
+              </TouchableOpacity>
+            </Animated.View>
+
             <Animated.View
               style={[styles.buttonContainer, buttonAnimatedStyle]}
             >
@@ -284,14 +370,6 @@ export default function CameraScreen() {
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Collection Stats Summary */}
-              <View style={styles.statsContainer}>
-                <Text style={styles.statsText}>
-                  {collectionData.items.length} animals in your collection
-                </Text>
-              </View>
-
-
               {/* Grid of all animals */}
               <View style={styles.gridContainer}>
                 {collectionData.items.map((item) => (
@@ -314,7 +392,6 @@ export default function CameraScreen() {
                   </TouchableOpacity>
                 ))}
               </View>
-
 
               {/* Bottom padding for scroll */}
               <View style={{ height: 100 }} />
@@ -482,5 +559,58 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+  topBar: {
+    position: "absolute",
+    top: 60, // Adjust based on your safe area
+    left: 20,
+    zIndex: 10,
+  },
+  profileIconButton: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#00000060",
+    justifyContent: "center",
+    alignItems: "center",
+    borderWidth: 2,
+    borderColor: "white",
+  },
+  profileIconPlaceholder: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#D4A373",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  profileInitial: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "white",
+  },
+  profileIconImage: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+  },
+  modalOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "rgba(0,0,0,0.6)",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 100,
+  },
+  animalCard: {
+    width: 300,
+    height: 400,
+    borderRadius: 20,
+    backgroundColor: "#FEFAE0",
+    justifyContent: "center",
+    alignItems: "center",
+    position: "absolute",
+  },
 });
-
