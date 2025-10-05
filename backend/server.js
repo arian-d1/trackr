@@ -9,11 +9,13 @@ const app = express();
 const port = process.env.PORT || 3000;
 
 // Middleware
-app.use(cors({
-  origin: "*", // For testing. Later, lock this down to your actual domain if needed.
-  methods: ["GET", "POST", "OPTIONS"],
-  allowedHeaders: ["Content-Type"],
-}));
+app.use(
+  cors({
+    origin: "*", // For testing. Later, lock this down to your actual domain if needed.
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"],
+  }),
+);
 app.options("*", cors());
 app.use(express.json({ limit: "10mb" })); // Increase limit for base64
 
