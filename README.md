@@ -9,12 +9,12 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 ## Get started
 1. Clone this repository
    ```bash
-   git clone
+   git clone 
 2. Install Dependencies
     ```bash
    npm install
    ```
-3.  Start the app
+3. Start the app
    ```bash
    npx expo start
    ```
