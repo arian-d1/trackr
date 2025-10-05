@@ -64,7 +64,7 @@ export async function processImage64(base64, mimeType = "image/jpeg") {
     ]);
 
     const responseText = await result.response.text();
-    console.log("Gemini response:", responseText);
+    console.log("Gemini response:", parseResponse(responseText));
     return parseResponse(responseText);
   } catch (err) {
     throw err;
