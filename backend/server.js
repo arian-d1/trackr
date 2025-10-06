@@ -4,8 +4,6 @@ import dotenv from "dotenv";
 import express from "express";
 import session from "express-session";
 import authRouter from "./authRouter.js";
-import { processImage64 } from "./itt.js";
-import mongoose from "mongoose";
 
 // mongoose.connect('mongodb://localhost:27017/trackr');
 
@@ -43,8 +41,8 @@ const apiRouter = express.Router();
 
 app.use("/api", apiRouter);
 
-// Endpoint 1: Process image using itt.js
 apiRouter.post("/process", async (req, res) => {
+  console.log('wow');
   try {
     const { base64, mimeType } = req.body;
 
@@ -56,7 +54,9 @@ apiRouter.post("/process", async (req, res) => {
     const cleanBase64 = base64.replace(/^data:image\/\w+;base64,/, "");
     const contentType = mimeType || "image/jpeg";
 
-    const result = await processImage64(cleanBase64, contentType);
+    // const result = await processImage64(cleanBase64, contentType);
+
+    const result = { data: true }
 
     res.json(result);
   } catch (error) {

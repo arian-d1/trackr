@@ -6,7 +6,7 @@ async function processImageBase64(base64, mimeType = "image/jpeg") {
       base64,
       mimeType,
     });
-    console.log(response);
+    console.log('this one', response);
     return response.data;
   } catch (error) {
     console.error(
@@ -18,3 +18,4 @@ async function processImageBase64(base64, mimeType = "image/jpeg") {
 }
 
 export { processImageBase64 };
+

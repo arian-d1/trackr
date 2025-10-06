@@ -1,6 +1,4 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
-import dotenv from "dotenv";
-dotenv.config();
 
 console.log("Gemini API Key:", process.env.GEMINI_API_KEY);
 
@@ -14,6 +12,7 @@ const ALLOWED_ANIMALS = [
   "Pigeon",
   "Crow",
   "Goose",
+  "Dog"
 ];
 
 // Generate Gemini prompt
