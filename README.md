@@ -17,8 +17,9 @@ See our figma: https://www.figma.com/design/kVMjFmQlaH0wzLTeMCUUH4/Trackr---Stor
     ```bash
    npm install && npm start
    ```
-3. Start backend
-   1. Open a new terminal
+3. Start the backend
+   1. Open a new terminal window
+
    ```bash
    cd backend && npm install && npm start
    ```
