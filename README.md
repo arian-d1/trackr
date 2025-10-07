@@ -19,7 +19,7 @@ See our figma: https://www.figma.com/design/kVMjFmQlaH0wzLTeMCUUH4/Trackr---Stor
    ```
 3. Start backend
    1. Open a new terminal
-   2. ```bash
+   ```bash
    cd backend && npm install && npm start
    ```
 4. Install and use Expo Go
