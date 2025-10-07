@@ -18,27 +18,25 @@ See our figma: https://www.figma.com/design/kVMjFmQlaH0wzLTeMCUUH4/Trackr---Stor
    npm install && npm start
    ```
 3. Start backend
-   ```cd backend && npm install && npm start
+   ```bash
+   cd backend && npm install && npm start
    ```
 4. Install and use Expo Go
-   ```Install Expo Go from your phones app store.
-   
-   Open your phones camera and scan the QR code to open the live development environment inside the Expo Go app.
+   1. Install Expo Go from your phones app store.
+   2. Open your phones camera and scan the QR code to open the live development environment inside the Expo Go app.
+5. Setup .env files 
+   "./backend/.env":
+   ```bash
+   MONGODB_URI=mongodb://<LAN_IP>:27017/trackr
+   MONGODB_DB=trackr
+   JWT_SECRET=replace_with_a_long_random_secretrsr
+   SESSION_SECRET=replace_with_another_secret
    ```
 
-5. Setup .env files 
-
-### /backend:
-```MONGODB_URI=mongodb://<LAN_IP>:27017/trackr
-MONGODB_DB=trackr
-JWT_SECRET=replace_with_a_long_random_secretrsr
-SESSION_SECRET=replace_with_another_secret
-```
-
-### /:
-```
-EXPO_PUBLIC_API_BASE_URL=http://<LAN_IP>:3000
-```
+   "./.env":
+   ```bash
+   EXPO_PUBLIC_API_BASE_URL=http://<LAN_IP>:3000
+   ```
 
 In the output, you'll find options to open  **trackr**  in a
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
