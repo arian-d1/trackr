@@ -2,27 +2,28 @@ import { IconSymbol } from "@/components/ui/icon-symbol";
 import { CameraType, CameraView, useCameraPermissions } from "expo-camera";
 import React, { useEffect, useState } from "react";
 import {
-  Dimensions,
-  Image,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    Alert,
+    Dimensions,
+    Image,
+    Platform,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
 import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
+    Gesture,
+    GestureDetector,
+    GestureHandlerRootView,
 } from "react-native-gesture-handler";
 import Animated, {
-  Extrapolate,
-  interpolate,
-  useAnimatedStyle,
-  useSharedValue,
-  withSpring,
+    Extrapolate,
+    interpolate,
     runOnJS,
-
+    useAnimatedStyle,
+    useSharedValue,
+    withSpring,
 } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -30,23 +31,12 @@ import PhotoPreview from "@/components/PhotoPreview";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Location from "expo-location";
 
-import { processImageBase64 } from "../util/gemini";
-
+import { useAuth } from "@/context/AuthContext";
 import { useRouter } from "expo-router";
+import api from "../util/axios";
 
 const SCREEN_HEIGHT = Dimensions.get("window").height;
-const collectionData = {
-  items: [
-    { id: 1, user_id: 1, power: 122, animal_type: "Raccoon", image_uri: "/" },
-    { id: 2, user_id: 1, power: 1532, animal_type: "Squirrel", emoji: "/" },
-    { id: 3, user_id: 1, power: 43, animal_type: "Bear", emoji: "/" },
-    { id: 4, user_id: 1, power: 3824, animal_type: "Pigeon", emoji: "/" },
-    { id: 5, user_id: 1, power: 232, animal_type: "Pigeon", emoji: "/" },
-    { id: 6, user_id: 1, power: 453, animal_type: "Crow", emoji: "/" },
-    { id: 7, user_id: 1, power: 252, animal_type: "Goose", emoji: "/" },
-  ],
-  total: 7,
-};
+// Collection data will be fetched from API
 
 // Animal image dictionary
 const animal_image_dict: { [key: string]: any } = {
@@ -72,6 +62,7 @@ async function getImageAsBase64(uri: string) {
 }
 
 export default function CameraScreen() {
+  
   const [cameraPermission, reqCameraPermission] = useCameraPermissions();
   const [cameraRef, setCameraRef] = useState<CameraView | null>(null);
 
@@ -96,13 +87,78 @@ export default function CameraScreen() {
   const [animalModalData, setAnimalModalData] = useState<{ name: string }[]>(
     [],
   );
+  const { user } = useAuth();
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [showAnimalModal, setShowAnimalModal] = useState(false);
+  
+  // Collection data state
+  const [collectionData, setCollectionData] = useState<{
+    items: Array<{
+      id: string;
+      user_id: string;
+      power: number;
+      animal_type: string;
+      image_uri?: string;
+      emoji?: string;
+    }>;
+    total: number;
+  }>({
+    items: [],
+    total: 0,
+  });
+  const [collectionLoading, setCollectionLoading] = useState(false);
+  const [captures, setCaptures] = useState<any[]>([]);
+  
 
   const zoom = useSharedValue(0);
   const baseZoom = useSharedValue(0);
   const [zoomLevel, setZoomLevel] = useState(0);
 
+
+  // Fetch collection data
+  const loadCollectionData = async () => {
+    if (!user) return;
+    
+    try {
+      setCollectionLoading(true);
+      const response = await api.get(`/api/captures/${user.username}`);
+      const capturesData = response.data;
+      
+      // Store the captures data for navigation
+      setCaptures(capturesData);
+      
+      // Group captures by animal type and get the highest rating for each
+      const animalGroups: { [key: string]: { maxRating: number; count: number } } = {};
+      
+      capturesData.forEach((capture: any) => {
+        const animalType = capture.animal;
+        if (!animalGroups[animalType]) {
+          animalGroups[animalType] = { maxRating: 0, count: 0 };
+        }
+        animalGroups[animalType].maxRating = Math.max(animalGroups[animalType].maxRating, capture.rating || 0);
+        animalGroups[animalType].count += 1;
+      });
+      
+      // Convert to collection items format
+      const items = Object.entries(animalGroups).map(([animalType, data], index) => ({
+        id: `${index}`,
+        user_id: user._id,
+        power: data.maxRating,
+        animal_type: animalType,
+      }));
+      
+      setCollectionData({
+        items,
+        total: items.length,
+      });
+    } catch (error) {
+      console.error("Error loading collection data:", error);
+    } finally {
+      setCollectionLoading(false);
+    }
+  };
+
+  // Request permissions to camera and location.
   useEffect(() => {
     (async () => {
       const { status } = await Location.requestForegroundPermissionsAsync();
@@ -116,6 +172,14 @@ export default function CameraScreen() {
       }
     })();
   }, []);
+
+  // Load collection data when user changes
+  useEffect(() => {
+    if (user) {
+      loadCollectionData();
+    }
+  }, [user]);
+
 
   const sheetAnimatedStyle = useAnimatedStyle(() => ({
     transform: [{ translateY: sheetTranslation.value }],
@@ -133,19 +197,8 @@ export default function CameraScreen() {
     ),
   }));
 
-  const cameraAnimatedStyle = useAnimatedStyle(() => {
-    const opacity = interpolate(
-      sheetTranslation.value,
-      [0, SCREEN_HEIGHT - SHEET_PEEK_HEIGHT],
-      [0, 1],
-      Extrapolate.CLAMP,
-    );
 
-    return {
-      opacity,
-    };
-  });
-
+  // ? animate the photo button
   const buttonAnimatedStyle = useAnimatedStyle(() => {
     const opacity = interpolate(
       sheetTranslation.value,
@@ -159,10 +212,10 @@ export default function CameraScreen() {
     };
   });
 
+  // NEED PERMISSION
   if (!cameraPermission) {
     return <Text>Loading permissions...</Text>;
   }
-
   if (!cameraPermission.granted) {
     return (
       <View style={styles.center}>
@@ -173,20 +226,36 @@ export default function CameraScreen() {
       </View>
     );
   }
+  // NEED PERMISSION
 
+  // Flip the camera (switch camera in use)
   const toggleCameraType = () => {
     setFacing((facing) => (facing === "back" ? "front" : "back"));
   };
 
+  // Capture a photo and save to photoUri
   const takePicture = async () => {
-    if (cameraRef && locationPermission) {
+    if (cameraRef) {
       try {
-        const photo = await cameraRef.takePictureAsync();
-        const current = await Location.getCurrentPositionAsync({});
-        setLocation(current);
+        const photo = await cameraRef.takePictureAsync({
+          quality: 0.8,
+          base64: false,
+        });
+        
+        // Try to get location if permission is granted, but don't block photo capture
+        if (locationPermission === "granted") {
+          try {
+            const current = await Location.getCurrentPositionAsync({});
+            setLocation(current);
+          } catch (locationError) {
+            console.log("Could not get location:", locationError);
+          }
+        }
+        
         setPhotoUri(photo.uri);
       } catch (error) {
         console.error("Error taking picture:", error);
+        Alert.alert("Camera Error", "Could not capture photo. Please try again.");
       }
     }
   };
@@ -207,23 +276,8 @@ export default function CameraScreen() {
     }
   };
 
-  const swipeGesture = Gesture.Pan()
-    .onUpdate((event) => {
-      const newTranslation = sheetTranslation.value + event.translationY;
-      if (
-        newTranslation >= 0 &&
-        newTranslation <= SCREEN_HEIGHT - SHEET_PEEK_HEIGHT
-      ) {
-        sheetTranslation.value = newTranslation;
-      }
-    })
-    .onEnd(() => {
-      if (sheetTranslation.value < SCREEN_HEIGHT / 2) {
-        sheetTranslation.value = withSpring(0);
-      } else {
-        sheetTranslation.value = withSpring(SCREEN_HEIGHT - SHEET_PEEK_HEIGHT);
-      }
-    });
+
+  // Navigation swipe gestures are now handled by useSwipeNavigation hook
 
   const pinchGesture = Gesture.Pinch()
   .onStart(() => {
@@ -240,6 +294,7 @@ export default function CameraScreen() {
   .onEnd(() => {
   });
 
+  // Return (display) the photo that the user has taken.
   if (photoUri) {
     return (
       <PhotoPreview
@@ -253,16 +308,34 @@ export default function CameraScreen() {
           console.log("Location:", location);
           try {
             const base64Image = await getImageAsBase64(photoUri);
-            const response = await processImageBase64(base64Image);
+            
+            // Process image and save to database in one call
+            const response = await api.post("/api/process", {
+              base64: base64Image,
+              mimeType: "image/jpeg",
+              latitude: location?.coords.latitude,
+              longitude: location?.coords.longitude,
+              metadata: { 
+                platform: Platform.OS,
+                deviceModel: "Unknown", // Could be enhanced with device info
+                accuracyMeters: location?.coords.accuracy || 0
+              }
+            });
 
-            if (response.animals && response.animals.length > 0) {
-              setAnimalModalData(response.animals);
+            if (response.data.animals && response.data.animals.length > 0) {
+              setAnimalModalData(response.data.animals);
               setCurrentCardIndex(0);
               setShowAnimalModal(true);
+              console.log("Capture processed and saved:", response.data.capture);
+              
+              // Refresh collection data
+              loadCollectionData();
+            } else {
+              Alert.alert("No Animal Detected", "We couldn't identify any animals in this photo. Try taking another photo with a clearer view of the animal.");
             }
-            console.log(response);
           } catch (error) {
             console.error("Error processing image:", error);
+            Alert.alert("Error", "Failed to process your photo. Please try again.");
           }
 
           setPhotoUri(null);
@@ -271,6 +344,7 @@ export default function CameraScreen() {
     );
   }
 
+  // Return the live camera view.
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <View style={{ flex: 1 }}>
@@ -322,7 +396,7 @@ export default function CameraScreen() {
                       }}
                     >
                       <Text style={{ color: "white", fontWeight: "bold" }}>
-                        Next
+                        {currentCardIndex + 1 >= animalModalData.length ? "Done" : "Next"}
                       </Text>
                     </TouchableOpacity>
                   )}
@@ -332,7 +406,7 @@ export default function CameraScreen() {
           </View>
         )}
 
-        <Animated.View style={[{ flex: 1 }, cameraAnimatedStyle]}>
+        <View style={{ flex: 1 }}>
           <GestureDetector gesture={pinchGesture}>
             <CameraView
               ref={(ref) => setCameraRef(ref)}
@@ -344,11 +418,10 @@ export default function CameraScreen() {
                 <TouchableOpacity
                   style={styles.profileIconButton}
                   onPress={() => {
-                    // Navigate to profile screen
                     router.push("/profile");
                   }}
                 >
-                  <IconSymbol name="gearshape.fill" size={36} color="white" />
+                  <IconSymbol name="person.fill" size={36} color="white" />
                 </TouchableOpacity>
               </Animated.View>
 
@@ -382,49 +455,100 @@ export default function CameraScreen() {
               </Animated.View>
             </CameraView>
           </GestureDetector>
-        </Animated.View>
+        </View>
 
-        <GestureDetector gesture={swipeGesture}>
           <Animated.View style={[styles.bottomSheet, sheetAnimatedStyle]}>
             <View style={styles.sheetHandle} />
 
             {/* Collection Header */}
             <View style={styles.collectionHeader}>
-              <Text style={styles.collectionTitle}>Your Collection</Text>
+              <View style={styles.collectionHeaderTop}>
+                <Text style={styles.collectionTitle}>Your Collection</Text>
+                <TouchableOpacity
+                  style={styles.closeButton}
+                  onPress={() => {
+                    const toValue = SCREEN_HEIGHT - SHEET_PEEK_HEIGHT;
+                    sheetTranslation.value = withSpring(toValue, {
+                      damping: 20,
+                      stiffness: 100,
+                    });
+                  }}
+                >
+                  <IconSymbol name="xmark" size={24} color="#666" />
+                </TouchableOpacity>
+              </View>
               <Text style={styles.statsText}>
-                {collectionData.items.length} animals in your collection
+                {collectionLoading 
+                  ? "Loading..." 
+                  : `${collectionData.total} animals in your collection`
+                }
               </Text>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false}>
-              {/* Grid of all animals */}
-              <View style={styles.gridContainer}>
-                {collectionData.items.map((item) => (
-                  <TouchableOpacity
-                    key={item.id}
-                    style={styles.collectionCard}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.cardContent}>
-                      <Text style={styles.cardCount}>{item.power}</Text>
-                      <Text style={styles.cardLabel}>{item.animal_type}</Text>
-                    </View>
-                    {animal_image_dict[item.animal_type] && (
-                      <Image
-                        source={animal_image_dict[item.animal_type]}
-                        style={styles.cardIcon}
-                        resizeMode="contain"
-                      />
-                    )}
-                  </TouchableOpacity>
-                ))}
-              </View>
+              {collectionLoading ? (
+                <View style={styles.loadingContainer}>
+                  <Text style={styles.loadingText}>Loading your collection...</Text>
+                </View>
+              ) : collectionData.items.length > 0 ? (
+                <View style={styles.gridContainer}>
+                  {collectionData.items.map((item) => (
+                    <TouchableOpacity
+                      key={item.id}
+                      style={styles.collectionCard}
+                      activeOpacity={0.7}
+                      onPress={() => {
+                        // Find the actual capture data for this animal type with the highest rating
+                        const captureData = captures.find(capture => 
+                          capture.animal === item.animal_type && capture.rating === item.power
+                        );
+                        
+                        if (captureData) {
+                          router.push({
+                            pathname: "/animal-detail",
+                            params: {
+                              animal: captureData.animal,
+                              rating: captureData.rating.toString(),
+                              foundBy: user?.username || "You",
+                              foundByUsername: user?.username || "you",
+                              capturedAt: captureData.capturedAt,
+                              photo: captureData.photo,
+                              latitude: captureData.latitude?.toString() || "0",
+                              longitude: captureData.longitude?.toString() || "0",
+                              from: "collection"
+                            }
+                          });
+                        }
+                      }}
+                    >
+                      <View style={styles.cardContent}>
+                        <Text style={styles.cardCount}>{item.power}</Text>
+                        <Text style={styles.cardLabel}>{item.animal_type}</Text>
+                      </View>
+                      {animal_image_dict[item.animal_type] && (
+                        <Image
+                          source={animal_image_dict[item.animal_type]}
+                          style={styles.cardIcon}
+                          resizeMode="contain"
+                        />
+                      )}
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.emptyCollectionContainer}>
+                  <Text style={styles.emptyCollectionText}>No animals captured yet</Text>
+                  <Text style={styles.emptyCollectionSubtext}>
+                    Start taking photos to build your collection
+                  </Text>
+                </View>
+              )}
 
               {/* Bottom padding for scroll */}
               <View style={{ height: 100 }} />
             </ScrollView>
           </Animated.View>
-        </GestureDetector>
+
       </View>
     </GestureHandlerRootView>
   );
@@ -470,7 +594,7 @@ const styles = StyleSheet.create({
   },
   bottomSheet: {
     position: "absolute",
-    top: 0,
+    bottom: 0,
     left: 0,
     right: 0,
     height: SCREEN_HEIGHT,
@@ -486,20 +610,35 @@ const styles = StyleSheet.create({
     backgroundColor: "#D4A373",
     borderRadius: 2.5,
     alignSelf: "center",
+    marginTop: 10, // Added margin from top
     marginBottom: 16,
   },
   collectionHeader: {
-    alignItems: "center",
     marginBottom: 24,
-    paddingBottom: 16,
+    paddingTop: 60, // Increased padding for more space from top
+    paddingBottom: 20,
+    paddingHorizontal: 24,
     borderBottomWidth: 1,
     borderBottomColor: "#E9EDC9",
+  },
+  collectionHeaderTop: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
   },
   collectionTitle: {
     fontSize: 28,
     fontWeight: "bold",
     color: "#1A1A1A",
-    marginBottom: 4,
+  },
+  closeButton: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F5F5F5",
+    justifyContent: "center",
+    alignItems: "center",
   },
   collectionSubtitle: {
     fontSize: 16,
@@ -639,5 +778,30 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     position: "absolute",
+  },
+  loadingContainer: {
+    padding: 40,
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#666",
+    textAlign: "center",
+  },
+  emptyCollectionContainer: {
+    padding: 40,
+    alignItems: "center",
+  },
+  emptyCollectionText: {
+    fontSize: 18,
+    fontWeight: "600",
+    color: "#333",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  emptyCollectionSubtext: {
+    fontSize: 14,
+    color: "#666",
+    textAlign: "center",
   },
 });

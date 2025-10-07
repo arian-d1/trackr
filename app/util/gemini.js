@@ -1,12 +1,13 @@
 import axios from "./axios";
 
-async function processImageBase64(base64, mimeType = "image/jpeg") {
+async function processImageBase64(base64, mimeType = "image/jpeg", extra = {}) {
   try {
     const response = await axios.post(`/api/process`, {
       base64,
       mimeType,
+      ...extra, // can include username, animal, latitude, longitude, metadata
     });
-    console.log(response);
+    console.log('this one', response);
     return response.data;
   } catch (error) {
     console.error(
@@ -18,3 +19,5 @@ async function processImageBase64(base64, mimeType = "image/jpeg") {
 }
 
 export { processImageBase64 };
+export default processImageBase64;
+

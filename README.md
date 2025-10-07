@@ -13,20 +13,36 @@ See our figma: https://www.figma.com/design/kVMjFmQlaH0wzLTeMCUUH4/Trackr---Stor
 1. Clone this repository
    ```bash
    git clone https://github.com/arian-d1/trackr.git
-2. Install Dependencies
+2. Start the frontend
     ```bash
-   npm install
+   npm install && npm start
    ```
-3. Start the app
+3. Start the backend
+   1. Open a new terminal window
+
    ```bash
-   npx expo start
+   cd backend && npm install && npm start
+   ```
+4. Install and use Expo Go
+   1. Install Expo Go from your phones app store.
+   2. Open your phones camera and scan the QR code to open the live development environment inside the Expo Go app.
+5. Setup .env files
+
+   /backend/.env
+   ```bash
+   MONGODB_URI=mongodb://<LAN_IP>:27017/trackr
+   MONGODB_DB=trackr
+   JWT_SECRET=replace_with_a_long_random_secretrsr
+   SESSION_SECRET=replace_with_another_secret
    ```
 
+   /.env
+   ```bash
+   EXPO_PUBLIC_API_BASE_URL=http://<LAN_IP>:3000
+   ```
 
 In the output, you'll find options to open  **trackr**  in a
-
 - [development build](https://docs.expo.dev/develop/development-builds/introduction/)
 - [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
 - [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
 - [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
