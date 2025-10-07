@@ -22,6 +22,20 @@ See our figma: https://www.figma.com/design/kVMjFmQlaH0wzLTeMCUUH4/Trackr---Stor
    npx expo start
    ```
 
+4. .env: 
+
+/backend:
+```MONGODB_URI=mongodb://<LAN_IP>:27017/trackr
+MONGODB_DB=trackr
+JWT_SECRET=replace_with_a_long_random_secretrsr
+SESSION_SECRET=replace_with_another_secret
+```
+
+/:
+```
+EXPO_PUBLIC_API_BASE_URL=http://<LAN_IP>:3000
+```
+
 
 In the output, you'll find options to open  **trackr**  in a
 
