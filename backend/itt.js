@@ -5,7 +5,7 @@ console.log("Gemini API Key:", process.env.GEMINI_API_KEY);
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 // Allowed animals
-const ALLOWED_ANIMALS = [
+export const ALLOWED_ANIMALS = [
   "Raccoon",
   "Squirrel",
   "Bear",

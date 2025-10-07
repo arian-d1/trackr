@@ -19,7 +19,8 @@
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
       "edgeToEdgeEnabled": true,
-      "predictiveBackGestureEnabled": false
+      "predictiveBackGestureEnabled": false,
+      "package": "com.anonymous.trackr"
     },
     "web": {
       "output": "static",
@@ -38,8 +39,12 @@
             "backgroundColor": "#000000"
           }
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
+    "extra": {
+      "EXPO_PUBLIC_API_BASE_URL": "http://<LAN_IP>:3000"
+    },
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true

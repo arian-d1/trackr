@@ -8,10 +8,14 @@ const friendSchema = new mongoose.Schema({
 });
 */
 
-const friendSchema = new mongoose.Schema({
-  friend_id_1: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-  friend_id_2: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
-});
+const friendSchema = new mongoose.Schema(
+  {
+    friend_id_1: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    friend_id_2: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+    status: { type: String, enum: ["pending", "accepted", "blocked"], default: "pending" },
+  },
+  { timestamps: true },
+);
 
 const Friend = mongoose.model("Friend", friendSchema);
 
