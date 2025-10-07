@@ -26,8 +26,9 @@ See our figma: https://www.figma.com/design/kVMjFmQlaH0wzLTeMCUUH4/Trackr---Stor
 4. Install and use Expo Go
    1. Install Expo Go from your phones app store.
    2. Open your phones camera and scan the QR code to open the live development environment inside the Expo Go app.
-5. Setup .env files 
-   "./backend/.env":
+5. Setup .env files
+
+   /backend/.env
    ```bash
    MONGODB_URI=mongodb://<LAN_IP>:27017/trackr
    MONGODB_DB=trackr
@@ -35,7 +36,7 @@ See our figma: https://www.figma.com/design/kVMjFmQlaH0wzLTeMCUUH4/Trackr---Stor
    SESSION_SECRET=replace_with_another_secret
    ```
 
-   "./.env":
+   /.env
    ```bash
    EXPO_PUBLIC_API_BASE_URL=http://<LAN_IP>:3000
    ```
